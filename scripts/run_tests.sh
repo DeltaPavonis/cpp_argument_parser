@@ -35,11 +35,11 @@ run_test() {
 
 # Test general functionality
 run_test "Test with no command-line arguments given (all options should have their default values)" ""
-run_test "Test all --option[=value]" "--nthreads=4 --spp=100 --seed=1 --imagefile="imagefile.txt" --input="inputfile.txt" --quiet --logutil --partial"
-run_test "Test all --option[ value]" "--nthreads 4 --spp 100 --seed 1 --imagefile "imagefile.txt" --input "inputfile.txt""
+run_test "Test all --option[=value]" "--nthreads=4 --spp=100 --seed=1 --imagefile=imagefile.txt --input=inputfile.txt --quiet --logutil --partial"
+run_test "Test all --option[ value]" "--nthreads 4 --spp 100 --seed 1 --imagefile imagefile.txt --input inputfile.txt"
 run_test "Test all -shortened_option[=value]" "-n=4 -s=1 -q -l -p"
 run_test "Test boolean option chaining" "-qlp"
-run_test "Mix" "--nthreads 4 -s=1 -qp -l=false --input "other_scene.txt""
+run_test "Mix" "--nthreads 4 -s=1 -qp -l=false --input other_scene.txt"
 
 # Test errors
 run_test "Emits error on unknown option in --[option]=value" "--something=5"
@@ -47,7 +47,7 @@ run_test "Emits error on unknown option in --[option]" "--something"
 run_test "Emits error on unknown option in -[option]" "-x"
 run_test "Emits error on argument given without option" ""Hello!""
 run_test "Emits error on single dash followed by multi-character argument (-[option]=[...])" "-pqs=5"
-run_test "Emits error on single dash folloed by string containing non-boolean single-character argument" "-pqs"
+run_test "Emits error on single dash followed by string containing non-boolean single-character argument" "-pqs"
 run_test "Emits error on missing argument for non-boolean option" "--nthreads"
 run_test "Does NOT emit error on missing argument for boolean option (instead, defaults to true)" "--quiet"
 run_test "Emits error on invalid argument to int option" "-n="Hello""
