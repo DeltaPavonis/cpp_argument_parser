@@ -10,18 +10,9 @@ the corresponding public fields of this class. */
 class CommandLineOptions {
 
     /* Returns a `std::vector<std::string>` containing the command-line arguments in order,
-    excluding the first argument (which is always the executable itself). */
-    static auto get_command_line_arguments(int argc, char **argv) {
-
-        /* The first command-line argument is always the executable or command itself, so
-        we skip it */
-        std::vector<std::string> arguments(argc - 1);
-        for (int i = 0; i < argc - 1; ++i) {
-            arguments[i] = argv[i + 1];
-        }
-
-        return arguments;
-    }
+    excluding the first argument (which is always the executable itself). The returned arguments
+    are guaranteed to be encoded in UTF-8. */
+    static auto get_command_line_arguments(int argc, char **argv) -> std::vector<std::string>;
 
     /* Attempts to assign the value given by `argument` (a `std::string_view`) to the option
     `option` of type `T`. */

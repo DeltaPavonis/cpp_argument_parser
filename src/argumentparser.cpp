@@ -1,6 +1,10 @@
 #include "argumentparser.h"
 #include <iostream>
 
+#ifdef CPP_ARGUMENT_PARSER_IS_ON_WINDOWS
+#include "windows.h"
+#endif
+
 using namespace std::literals;
 
 /* Formats the arguments `args...` to `stdout` using `std::format` and `std::cout`, then
@@ -9,6 +13,91 @@ template <typename... Args>
 [[noreturn]] auto print_then_exit(std::format_string<Args...> format_str, Args&&... args) {
     std::cout << std::format(format_str, std::forward<Args>(args)...) << std::endl;
     std::exit(-1);
+}
+
+/* Returns a `std::vector<std::string>` containing the command-line arguments in order,
+excluding the first argument (which is always the executable itself). The returned arguments
+are guaranteed to be encoded in UTF-8. */
+auto CommandLineOptions::get_command_line_arguments(
+    int argc, char **argv
+) -> std::vector<std::string> {
+
+#ifndef CPP_ARGUMENT_PARSER_IS_ON_WINDOWS
+
+    /* In most versions of Linux and OSX, command-line arguments are by-default encoded in
+    UTF-8. This is convenient, because UTF-8-encoded strings can be exactly represented by
+    `std::string`, as `std::string` is just an array of bytes. Thus, if the current
+    operating system is not Windows, we will directly read each command-line argument
+    (excluding the first one, which is the executable) into a `std::string`, and return the
+    resulting arguments in a `std::vector<std::string>`. */
+
+    std::vector<std::string> arguments(argc - 1);
+    for (int i = 1; i < argc; ++i) {  /* Skip the first argument */
+        arguments[i - 1] = argv[i];
+    }
+
+    return arguments;
+#else
+    /* Unlike in Linux or OSX, where command-line arguments are by-default encoded under UTF-8,
+    command-line arguments on Windows are available in either ASCII or UTF-16. Here, we will take
+    the command-line arguments in UTF-16 and then convert them to UTF-8; this is done with the use
+    of several Windows-specific APIs. */
+
+    /* Firstly, we obtain the UTF-16-encoded command-line arguments (as well as the number of those
+    arguments). This is done by first calling `GetCommandLineW()`, which retrieves the command-line
+    string for the current process as a wide-character string (on Windows, a wide character is 16
+    bits, corresponding to the UTF-16 encoding). We then pass the resulting command-line string to
+    the `CommandLineToArgvW()` function, which parses the command-line string into an array (vector,
+    hence the Arg*v*W) of individual wide-string (hence the Argv*W*) arguments. The return type of
+    `CommandLineToArgvW` is `LPWSTR*` (an array of Long Pointers to Wide Strings), but we just use
+    `auto`; again, remember that wide strings are 16 bits on Windows, corresponding to the UTF-16
+    encoding. Finally, the number of parsed command-line arguments is found by passing in the
+    address of `num_args` to `CommandLineToArgvW`; after the function returns, `num_args` will have
+    been set to the desired value. */
+    int num_args;
+    auto argv_wide = CommandLineToArgvW(GetCommandLineW(), &num_args);
+
+    /* Now, we will convert every command-line argument in `argv_wide` from UTF-16 to UTF-8
+    (excluding the first command-line argument because it is just the executable, as before).
+    In total, we will return `num_args - 1` command-line arguments. */
+    std::vector<std::string> arguments(num_args - 1);
+    for (int i = 1; i < num_args; ++i) {  /* Skip the first argument */
+
+        /* First, we find the number of bytes needed to store the UTF-8-encoded version of
+        the current UTF-16-encoded argument, `argv_wide[i]`. This is done with a call to
+        `WideCharToMultiByte`, which is a Windows-specific API designed to convert strings
+        from wide characters (such as UTF-16) to multi-byte character sets such as UTF-8. Note
+        that this count includes the extra byte needed to store the NUL-terminator at the end
+        of the string. */
+        int utf8_size_needed_with_nul_terminator = WideCharToMultiByte(
+            CP_UTF8, 0, argv_wide[i], -1, nullptr, 0, nullptr, nullptr
+        );
+
+        /* Now, we will first allocate exactly `utf8_size_needed_with_nul_terminator - 1` bytes
+        to store the current argument as a UTF-8-encoded `std::string`. The reason we subtract
+        one from the size needed with the NUL-terminator is because `std::string` is not
+        explicitly NUL-terminated, unlike C-strings (note that `std::string` is IMplicitly
+        NUL-terminated, though; `str[str.size()]` is guaranteed to equal '\0' since C++11. This
+        is so that methods such as `c_str()` will return a valid NUL-terminated C-string). */
+        auto &curr_arg = arguments[i - 1];
+        curr_arg.resize(utf8_size_needed_with_nul_terminator - 1);
+
+        /* Finally, another call to `WideCharToMultiByte`, this time passing in the address of
+        `curr_arg` (and the size of the target buffer, which is just `curr_arg.size()`), writes
+        the UTF-8 equivalent of `argv_wide[i]` to `curr_arg`, as desired. */
+        WideCharToMultiByte(
+            CP_UTF8, 0, argv_wide[i], -1, curr_arg.data(), static_cast<int>(curr_arg.size()),
+            nullptr, nullptr
+        );
+    }
+
+    /* Finally, because `CommandLineToArgvW` allocates memory using the Win32 API local memory
+    function `LocalAlloc`, we need to free the returned array with `LocalFree` after we are
+    done using it. */
+    LocalFree(argv_wide);
+
+    return arguments;
+#endif
 }
 
 /* Attempts to assign the value given by `argument` (a `std::string_view`) to the option `option`

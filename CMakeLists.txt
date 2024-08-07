@@ -25,11 +25,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
       "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# Set the source files
 set(CPP_ARGUMENT_PARSER_SOURCES
     src/main.cpp
     src/argumentparser.cpp
 )
 
+# Add the executable
 add_executable(cpp_argument_parser ${CPP_ARGUMENT_PARSER_SOURCES})
 
 # Require C++20 for `cpp_argument_parser` (and because I use PUBLIC, also for all targets that link to
@@ -37,8 +39,20 @@ add_executable(cpp_argument_parser ${CPP_ARGUMENT_PARSER_SOURCES})
 target_compile_features(cpp_argument_parser PUBLIC cxx_std_20)
 set_target_properties(cpp_argument_parser PROPERTIES CXX_EXTENSIONS OFF)
 
-# Turn on compiler warnings
-target_compile_options(cpp_argument_parser PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wfloat-conversion)
-
-# Use cpp_argument_parser/include as an include directory for building the `cpp_argument_parser` executable
+# Use cpp_argument_parser/include as an include directory for building the `cpp_argument_parser`
+# executable
 target_include_directories(cpp_argument_parser PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Collect all needed preprocessor definitions
+set(CPP_ARGUMENT_PARSER_DEFINITIONS)
+
+# If the current operating system is Windows, add preprocessor definitions for
+# `CPP_ARGUMENT_PARSER_IS_ON_WINDOWS` (allowing us to detect this case in-code), and also define
+# `NOMINMAX`, which solves the issue where legacy macros for min and max inside "windows.h" cause
+# correct code to emit warnings (from StackOverflow: https://tinyurl.com/zpz6wyzt).
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    list(APPEND CPP_ARGUMENT_PARSER_DEFINITIONS "CPP_ARGUMENT_PARSER_IS_ON_WINDOWS" "NOMINMAX")
+endif()
+
+# Add all compile definitions (proprocessor options) to `cpp_argument_parser`.
+target_compile_definitions(cpp_argument_parser PRIVATE ${CPP_ARGUMENT_PARSER_DEFINITIONS})
