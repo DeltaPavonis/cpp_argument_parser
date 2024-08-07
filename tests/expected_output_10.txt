@@ -1,0 +1,4 @@
+Error: Unrecognized option pqs in -pqs=5
+Help: Single dashes are used for either one single-character option (e.g. cmd -n 5),
+or for multiple single-character boolean options. Did you mean to use two dashes
+instead of one?

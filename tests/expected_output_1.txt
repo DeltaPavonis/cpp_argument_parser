@@ -1,0 +1,10 @@
+Parsed options: {
+    nthreads: 4,
+    spp: 100,
+    seed: 1,
+    image_file: imagefile.txt,
+    input_file: inputfile.txt,
+    quiet: true,
+    log_util: true,
+    partial: true
+}

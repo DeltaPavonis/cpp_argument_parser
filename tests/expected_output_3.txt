@@ -1,0 +1,10 @@
+Parsed options: {
+    nthreads: 4,
+    spp: 0,
+    seed: 1,
+    image_file: image.ppm,
+    input_file: scene.txt,
+    quiet: true,
+    log_util: true,
+    partial: true
+}
