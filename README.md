@@ -1,7 +1,8 @@
 # cpp_argument_parser
 
-A basic command-line argument parser written in C++20.
+A robust command-line argument parser written in C++20.
 - **Cross-platform**; tested on Windows, Mac, and Linux.
+    - Correctly handles Windows-specific text encodings of command-line arguments
 - Supports single and double-dashed arguments with arbitrary names and types
     - Supports optional `=` signs (so `cmd --max-depth=5` and `cmd --max-depth 5` both work)
 - **Supports option bundling**: combining multiple single-character boolean options with a single dash (e.g. `cmd -abcd` rather than `cmd -a -b -c -d`)
