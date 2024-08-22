@@ -37,9 +37,9 @@ public:
 3. Finally add the fields corresponding to your options to `std::formatter<CommandLineOptions>::format()`.
 
 Afterwards, you would be able to execute your program, passing your options to the executable. For example, `cpp_argument_parser` would correctly handle all of the following:
-- `./cmd --max_threads 5 -ql -outfile=log.txt`
+- `./cmd --max_threads 5 -ql --outfile=log.txt`
 - `./cmd -m=5 -l=false --fail-on-warning`
-- `./cmd -q=1 --max_threads=20 -fl -outfile log.txt`
+- `./cmd -q=1 --max_threads=20 -fl -o log.txt`
 
 The command-line arguments are directly accessible from the fields of `CommandLineOptions`, which are set in its constructor.
 
